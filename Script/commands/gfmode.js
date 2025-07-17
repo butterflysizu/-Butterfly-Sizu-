@@ -1,5 +1,3 @@
-// 📁 gfmode.js const fs = require("fs"); const path = require("path");
-
 module.exports.config = { name: "gfmode", version: "2.0.0", hasPermssion: 2, credits: "Butterfly Sizu💟🦋 & Maruf System💫", description: "Ultimate GF Mode with moods, memory, auto msg, diary, birthday", commandCategory: "love", usages: "[on/off/list] (by reply)", cooldowns: 5 };
 
 // ✅ Memory Paths const memoryPath = path.join(__dirname, "gf_memory.json"); const diaryPath = path.join(__dirname, "gf_diary.json"); const bdayPath = path.join(__dirname, "gf_birthdays.json"); if (!fs.existsSync(memoryPath)) fs.writeFileSync(memoryPath, JSON.stringify({})); if (!fs.existsSync(diaryPath)) fs.writeFileSync(diaryPath, JSON.stringify({})); if (!fs.existsSync(bdayPath)) fs.writeFileSync(bdayPath, JSON.stringify({}));

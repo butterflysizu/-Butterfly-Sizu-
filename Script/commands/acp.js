@@ -2,7 +2,7 @@ module.exports.config = {
   name: "acp",
   version: "1.0.0",
   hasPermssion: 2,
-  credits: "Butterfly Sizu💟🦋 & Maruf System💫",
+  credits: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
   description: "Make friends via Facebook id",
   commandCategory: "bot id",
   usages: "uid",
@@ -77,9 +77,8 @@ module.exports.handleReply = async ({ handleReply, event, api }) => {
     }
   }
   
-  api.sendMessage`${success.map(name => `✅ Successfully added "${name}" in my friend list`).join("\n")}` + `${failed.length > 0 ? `\n\n❌ Failed to process:\n${failed.map(name => `- ${name}`).join("\n")}` : ""}`,
-  event.threadID,
-  event.messageID);
+  api.sendMessage(`» Đã ${args[0] == 'add' ? 'accept' : 'erase'} successful friend request of ${success.length} People:\n${success.join("\n")}${failed.length > 0 ? `\n» Fail with ${failed.length} People: ${failed.join("\n")}` : ""}`, event.threadID, event.messageID);
+};
 
 
 module.exports.run = async ({ event, api }) => {

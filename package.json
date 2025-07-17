@@ -1,7 +1,7 @@
 {
-  "name": "ISLAMICK BOT",
+  "name": "💫Butterfly🦋 Sizu💟",
   "version": "10.1.1",
-  "description": "made by 𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_☢️",
+  "description": "made by Butterfly Sizu💟🦋 & Maruf System💫",
   "main": "Cyber.js",
   "engines": {
       "node": "20.x",
@@ -14,25 +14,23 @@
   },
   "repository": {
       "type": "git",
-      "url": "https://github.com/cyber-ullash/CYBER-BOT-COMMUNITY.git"
+      "url": "https://github.com/butterfly0727/-Butterfly-Sizu-.git"
   },
   "keywords": [
       "bot",
       "facebook",
-      "ullashproject",
+      "marufproject",
       "messenger",
       "javasvript",
-      "ullash",
-      "cyberullash",
-      "cyberRajib ",
-      "islamick chat bot"
+      "maruf",
+      "cybermaruf"
   ],
-  "author": "Ullash ッ",
+  "author": "Maruf ッ",
   "license": "GPL-3.0",
   "bugs": {
-      "url": "https://github.com/cyber-ullash/CYBER-BOT-COMMUNITY/issues"
+      "url": "https://github.com/butterfly0727/-Butterfly-Sizu-/issues"
   },
-  "homepage": "https://github.com/cyber-ullash/CYBER-BOT-COMMUNITY/issues",
+  "homepage": "https://github.com/butterfly0727/-Butterfly-Sizu-/issues",
   "dependencies": {
       "@distube/ytdl-core": "^4.13.2",
       "@miraipr0ject/assets": "^1.0.9",

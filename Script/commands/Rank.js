@@ -2,11 +2,11 @@ module.exports.config = {
 	name: "rank",
 	version: "2.0.0",
 	hasPermssion: 0,
-	credits: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
+	credits: "Butterfly Sizu💟🦋 & Maruf System💫",
 	description: "View Member Rankings",
 	commandCategory: "Group",
 	usages: " [user] or [tag]",
-	cooldowns: 5,
+	cooldowns: 1,
 	dependencies: {
 		"fs-extra": "",
 		"path": "",

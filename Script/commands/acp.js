@@ -77,12 +77,9 @@ module.exports.handleReply = async ({ handleReply, event, api }) => {
     }
   }
   
-  api.sendMessage(
-  `${success.map(name => `✅ Successfully added "${name}" in my friend list`).join("\n")}` +
-  `${failed.length > 0 ? `\n\n❌ Failed to process:\n${failed.map(name => `- ${name}`).join("\n")}` : ""}`,
+  api.sendMessage`${success.map(name => `✅ Successfully added "${name}" in my friend list`).join("\n")}` + `${failed.length > 0 ? `\n\n❌ Failed to process:\n${failed.map(name => `- ${name}`).join("\n")}` : ""}`,
   event.threadID,
-  event.messageID
-);
+  event.messageID);
 
 
 module.exports.run = async ({ event, api }) => {

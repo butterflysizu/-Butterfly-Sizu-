@@ -94,9 +94,9 @@ module.exports.run = async ({ api, event, args }) => {
 
         let data = await api.getUserInfo(id);
         data = data[id];
-        let url = data.profileUrl || "N/A";
-        let b = data.isFriend == false ? "No" : data.isFriend == true ? "Yes" : "Unknown";
-        let sn = data.vanity || "N/A";
+        let profileLink = "https://facebook.com/" + (data.vanity ? data.vanity : id);
+        let isFriend = data.isFriend === true ? "Yes" : "No";
+        let username = data.vanity || "N/A";
         let name = data.name || "N/A";
         let gender = data.gender == 2 ? "Male" : data.gender == 1 ? "Female" : "Other";
         let uid = id;
@@ -104,11 +104,11 @@ module.exports.run = async ({ api, event, args }) => {
         // Profile pic
         const callback = () => api.sendMessage({
             body: `Name: ${name}` +
-                `\nUser url: ${url}` +
-                `\nUser name: ${sn}` +
+                `\nFacebook: ${profileLink}` +
+                `\nUser name: ${username}` +
                 `\nUID: ${uid}` +
                 `\nGender: ${gender}` +
-                `\nMake friends with bots: ${b}`,
+                `\nMake friends with bots: ${isFriend}`,
             attachment: fs.createReadStream(__dirname + "/cache/1.png")
         }, event.threadID, () => {
             try { fs.unlinkSync(__dirname + "/cache/1.png"); } catch (e) {}

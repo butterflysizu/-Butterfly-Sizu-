@@ -2,7 +2,7 @@ module.exports.config = {
 	name: "bio",
 	version: "1.0.0",
 	hasPermssion: 2,
-	credits: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
+	credits: "Butterfly Sizu💟🦋 & Maruf System💫",
 	description: "Change bot's bio",
 	commandCategory: "admin",
 	usages: "bio [text]",

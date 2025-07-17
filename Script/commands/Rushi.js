@@ -13,7 +13,7 @@ module.exports.run = async ({ api, event }) => {
  const axios = require('axios');
  const request = require('request');
  const fs = require("fs");
- axios.get('https://saikiapi-v3-production.up.railway.app/holo/rushia').then(res => {
+ axios.get('https://nekos.life/api/v2/img/neko').then(res => {
  let ext = res.data.url.substring(res.data.url.lastIndexOf(".") + 1);
  let callback = function () {
      api.sendMessage({

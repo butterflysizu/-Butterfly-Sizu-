@@ -3,7 +3,7 @@ module.exports.config = {
     name: "job",
     version: "1.0.2",
     hasPermssion: 0,
-    credits: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️", 
+    credits: "Butterfly Sizu💟🦋 & Maruf System💫", 
     description: "",
     commandCategory: "Economy",
     cooldowns: 5,
@@ -78,40 +78,41 @@ var msg = "";
     };
 }
 }
-module.exports.run = async ({  event, api, handleReply, Currencies, getText }) => {
-    const { threadID, messageID, senderID } = event;
-    const cooldown = global.configModule[this.config.name].cooldownTime;
-    let data = (await Currencies.getData(senderID)).data || {};
-    //cooldownTime for each receipt 
-    if (typeof data !== "undefined" && cooldown - (Date.now() - data.work2Time) > 0) {
+module.exports.run = async ({ event, api, Currencies, getText }) => {
+  const { threadID, messageID, senderID } = event;
+  const cooldown = global.configModule[this.config.name].cooldownTime;
+  let data = (await Currencies.getData(senderID)).data || {};
 
-        var time = cooldown - (Date.now() - data.work2Time),
-            minutes = Math.floor(time / 60000),
-            seconds = ((time % 60000) / 1000).toFixed(0); 
-        return api.sendMessage(getText("cooldown", minutes, (seconds < 10 ? "0" + seconds : seconds)), event.threadID, event.messageID);
-    }
-    else {    
-    return api.sendMessage("Coin Earn Job Center" +
-  /*công nghiệp*/ "\n\n1. work1" +
-  /*dịch vụ*/  "\n2. work2." +
-  /*Mỏ dầu*/ "\n3. work3." +
-  /*Quặng*/ "\n4. work4" +
-  /*Đào đá*/ "\n5. work5" +
-  /*cave*/    "\n6. work6" +
-                "\n7. Update soon..." +
-                "\n\n⚡️Please reply to the message and choose by number" //add case display here ||  \n[number]. [Career]" +
-            , event.threadID, (error, info) => {
-                data.work2Time = Date.now();
+  if (typeof data !== "undefined" && cooldown - (Date.now() - data.work2Time) > 0) {
+    var time = cooldown - (Date.now() - data.work2Time),
+      minutes = Math.floor(time / 60000),
+      seconds = ((time % 60000) / 1000).toFixed(0);
+    return api.sendMessage(
+      getText("cooldown", minutes, seconds < 10 ? "0" + seconds : seconds),
+      threadID,
+      messageID
+    );
+  } else {
+    return api.sendMessage(
+      "🧰 Coin Earn Job Center" +
+        "\n\n1. 👷 Work at Industrial Area" +
+        "\n2. 💼 Work in Service Area" +
+        "\n3. 🛢️ Work at Oil Field" +
+        "\n4. ⛏️ Mine Ore" +
+        "\n5. 🪨 Dig Stones" +
+        "\n6. 🤭 Odd Job (Funny Option)" +
+        "\n7. 🛠️ Coming Soon..." +
+        "\n\n⚡️Please reply to this message and choose your job by number (1-7)",
+      threadID,
+      (error, info) => {
+        if (error) return console.error(error);
         global.client.handleReply.push({
-            type: "choosee",
-            name: this.config.name,
-            author: event.senderID,
-            messageID: info.messageID
-          })  
-        })
-    }
-}
-/*
-@credit P-SeverTeam
-@Vui lòng không đổi credit!
-*/
+          type: "choosee",
+          name: this.config.name,
+          author: senderID,
+          messageID: info.messageID
+        });
+      }
+    );
+  }
+};

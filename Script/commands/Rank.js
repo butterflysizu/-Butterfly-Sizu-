@@ -6,7 +6,7 @@ module.exports.config = {
 	description: "View Member Rankings",
 	commandCategory: "Group",
 	usages: " [user] or [tag]",
-	cooldowns: 1,
+	cooldowns: 5,
 	dependencies: {
 		"fs-extra": "",
 		"path": "",

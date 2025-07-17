@@ -70,7 +70,7 @@ module.exports.run = async function ({ api, event, args }) {
   // ✅ Admin-only
   const adminUID = "100070782965051";
   if (senderID !== adminUID)
-    return api.sendMessage("⛔️ GF Mode command শুধুমাত্র Maruf-এর জন্য!", threadID);
+    return api.sendMessage("⛔️ GF Mode command শুধুমাত্র Admin Maruf-এর জন্য!", threadID);
 
   // ✅ Target user
   const targetID = messageReply ? messageReply.senderID : senderID;

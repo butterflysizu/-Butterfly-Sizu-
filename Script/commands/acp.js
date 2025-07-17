@@ -9,16 +9,37 @@ module.exports.config = {
   cooldowns: 0
 };
 
-
 module.exports.handleReply = async ({ handleReply, event, api }) => {
   const { author, listRequest } = handleReply;
   if (author != event.senderID) return;
-  const args = event.body.replace(/ +/g, " ").toLowerCase().split(" ");
-  
-  const form = {
-    av: api.getCurrentUserID(),
-		fb_api_caller_class: "RelayModern",
-		variables: {
+
+  const args = event.body.trim().split(" ");
+  const action = args[0].toLowerCase();
+  let targetIDs = args.slice(1);
+
+  if (action !== "add" && action !== "del") {
+    return api.sendMessage(
+      '⚠️ Please choose `add` or `del`, like:\n👉 add 1\n👉 del all',
+      event.threadID,
+      event.messageID
+    );
+  }
+
+  if (args[1] == "all") {
+    targetIDs = listRequest.map((_, i) => (i + 1).toString());
+  }
+
+  const success = [];
+  const failed = [];
+
+  for (const stt of targetIDs) {
+    const user = listRequest[parseInt(stt) - 1];
+    if (!user) {
+      failed.push(`❌ Not found: ${stt}`);
+      continue;
+    }
+
+    const variables = {
       input: {
         source: "friends_tab",
         actor_id: api.getCurrentUserID(),
@@ -26,88 +47,38 @@ module.exports.handleReply = async ({ handleReply, event, api }) => {
       },
       scale: 3,
       refresh_num: 0
-		}
-  };
-  
-  const success = [];
-  const failed = [];
-  
-  if (args[0] == "add") {
-    form.fb_api_req_friendly_name = "FriendingCometFriendRequestConfirmMutation";
-    form.doc_id = "3147613905362928";
-  }
-  else if (args[0] == "del") {
-    form.fb_api_req_friendly_name = "FriendingCometFriendRequestDeleteMutation";
-    form.doc_id = "4108254489275063";
-  }
-  else return api.sendMessage("Please choose <add | del > <numerical order | or \"all\">", event.threadID, event.messageID);
-  let targetIDs = args.slice(1);
-  
-  if (args[1] == "all") {
-    targetIDs = [];
-    const lengthList = listRequest.length;
-    for (let i = 1; i <= lengthList; i++) targetIDs.push(i);
-  }
-  
-  const newTargetIDs = [];
-  const promiseFriends = [];
-  
-  for (const stt of targetIDs) {
-    const u = listRequest[parseInt(stt) - 1];
-    if (!u) {
-      failed.push(`stt not found ${stt} in the list`);
-      continue;
-    }
-    form.variables.input.friend_requester_id = u.node.id;
-    form.variables = JSON.stringify(form.variables);
-    newTargetIDs.push(u);
-    promiseFriends.push(api.httpPost("https://www.facebook.com/api/graphql/", form));
-		form.variables = JSON.parse(form.variables);
-  }
-  
-  const lengthTarget = newTargetIDs.length;
-  for (let i = 0; i < lengthTarget; i++) {
-    try {
-      const friendRequest = await promiseFriends[i];
-      if (JSON.parse(friendRequest).errors) failed.push(newTargetIDs[i].node.name);
-      else success.push(newTargetIDs[i].node.name);
-    }
-    catch(e) {
-      failed.push(newTargetIDs[i].node.name);
-    }
-  }
-  
-  api.sendMessage(`${success.map(name => `✅ Successfully added "${name}" in my friend list`).join("\n")}` +
-  `${failed.length > 0 ? `\n\n❌ Failed to process:\n${failed.map(name => `- ${name}`).join("\n")}` : ""}`,
-  event.threadID,
-  event.messageID);
-};
+    };
 
-module.exports.run = async ({ event, api }) => {
-  const moment = require("moment-timezone");
-  const form = {
-    av: api.getCurrentUserID(),
-  	fb_api_req_friendly_name: "FriendingCometFriendRequestsRootQueryRelayPreloader",
-  	fb_api_caller_class: "RelayModern",
-  	doc_id: "4499164963466303",
-  	variables: JSON.stringify({input: {scale: 3}})
-  };
-  const listRequest = JSON.parse(await api.httpPost("https://www.facebook.com/api/graphql/", form)).data.viewer.friending_possibilities.edges;
-  let msg = "";
-  let i = 0;
-  for (const user of listRequest) {
-    i++;
-    msg += (`\n${i}. Name: ${user.node.name}`
-         + `\nID: ${user.node.id}`
-         + `\nUrl: ${user.node.url.replace("www.facebook", "fb")}`
-         + `\nTime: ${moment(user.time*1009).tz("Asia/Manila").format("DD/MM/YYYY HH:mm:ss")}\n`);
+    if (action === "add") {
+      variables.input.friend_requester_id = user.node.id;
+    } else if (action === "del") {
+      variables.input.friend_request_id = user.node.id;
+    }
+
+    const form = {
+      av: api.getCurrentUserID(),
+      fb_api_caller_class: "RelayModern",
+      fb_api_req_friendly_name: action === "add" ?
+        "FriendingCometFriendRequestConfirmMutation" :
+        "FriendingCometFriendRequestDeleteMutation",
+      doc_id: action === "add" ? "3147613905362928" : "4108254489275063",
+      variables: JSON.stringify(variables)
+    };
+
+    try {
+      const res = await api.httpPost("https://www.facebook.com/api/graphql/", form);
+      const json = JSON.parse(res);
+      if (json.errors) failed.push(user.node.name);
+      else success.push(user.node.name);
+    } catch (e) {
+      failed.push(user.node.name);
+    }
   }
-  api.sendMessage(`${msg}\nReply to this message with content: <add | del> <numerical order | or \"all\"> to take action`, event.threadID, (e, info) => {
-      global.client.handleReply.push({
-        name: this. config. name,
-        messageID: info.messageID,
-        listRequest,
-        author: event.senderID
-      });
-    }, event.messageID);
+
+  api.sendMessage(
+    `${success.map(name => `✅ Successfully ${action === 'add' ? 'added' : 'removed'} "${name}" in my friend list`).join("\n")}` +
+    `${failed.length > 0 ? `\n\n❌ Failed:\n${failed.map(n => `- ${n}`).join("\n")}` : ""}`,
+    event.threadID,
+    event.messageID
+  );
 };

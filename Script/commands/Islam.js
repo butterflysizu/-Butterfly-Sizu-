@@ -3,9 +3,9 @@ module.exports.config = {
   name: "islam",
   version: "1.0.0",
   hasPermssion: 0,
-  credits: "Islamick Chat",
+  credits: "💫Butterfly🦋 Sizu💟",
   description: "prefix VEDIO",
-  commandCategory: "𝐂𝐘𝐁𝐄𝐑 ☢️_𖣘 -𝐁𝐎𝐓 ⚠️ 𝑻𝑬𝑨𝑴_ ☢️",
+  commandCategory: "Butterfly Sizu💟🦋 & Maruf System💫",
   usages: "love10 vedio",
   cooldowns: 5,
   dependencies: {

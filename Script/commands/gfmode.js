@@ -1,24 +1,32 @@
 const fs = require("fs");
 const path = require("path");
 
-// --------- GF MODE GLOBAL MEMORY + DATA PATHS ---------
+module.exports.config = {
+  name: "gfmode",
+  version: "2.0.0",
+  hasPermssion: 2,
+  credits: "Butterfly Sizu💟🦋 & Maruf System💫",
+  description: "GF Mode: romantic AI mode with mood, memory & date system",
+  commandCategory: "love",
+  usages: "[on/off/list/setgfdate/gfdiary]",
+  cooldowns: 5
+};
+
+const DATA_FILE = path.join(__dirname, "gfdata.json");
 if (!global.gfmode) global.gfmode = {};
-const GF_DATA_PATH = path.join(__dirname, "gfdata.json");
-const DIARY_PATH = path.join(__dirname, "gfdiary.json");
+if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, "{}");
 
-// --------- HELPER: Load/Save JSON ---------
-function loadJSON(file, def = {}) {
-  try { return JSON.parse(fs.readFileSync(file, "utf-8")); }
-  catch { return def; }
-}
-function saveJSON(file, data) {
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
+// Load GF data
+const loadData = () => JSON.parse(fs.readFileSync(DATA_FILE, "utf-8"));
+const saveData = (data) => fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 
-// --------- GF MODE NICKNAMES ---------
+// Admin UID
+const adminUID = "100070782965051";
+
+// Nicknames
 const nicknames = ["জান", "পাখি", "বেবি", "সোনা", "জানু"];
 
-// --------- DEFAULT AUTO-MESSAGES ---------
+// Auto romantic messages
 const autoMessages = [
   "তুমি কথা না বললে মনটাই খারাপ হয়ে যায় 💔",
   "সারাদিন তোমার কথাই ভেবেছি শুধু 💭",
@@ -28,170 +36,101 @@ const autoMessages = [
   "আমার মন খারাপ, একটু আদর করো না? 🥹"
 ];
 
-// --------- VOICE STYLE & EMOJI ONLY ---------
-const voiceStyle = [
-  "Hmm... জান 🥹", "Ufff জানু... তুমি না হলে চলেই না 😘", "Shonaaaa...🥺", "মুডটা ভালো নেই জান...", "আদর করো প্লিজ 🥰"
-];
-const emojiOnly = ["❤️", "🥰", "😚", "🤭", "🌹", "😍", "😜"];
-
-// --------- MOOD REPLY TEMPLATES ---------
-const moodReplies = [
-  (nick) => `💖 ${nick}... আমি তোমাকে ছাড়া কিছুই ভাবতে পারি না...`,
-  (nick) => `🥰 ${nick} তোমার এক মেসেজে আমি বেঁচে থাকি যেনো!`,
-  (nick) => `🌸 ${nick}, কেমন করে তুমি এতো ভালো হও বলো তো?`,
-  (nick) => `🌹 ${nick} তুমি না থাকলে জীবনটা ফাঁকা লাগে...`,
-  (nick) => `😘 ${nick} তোমার হাসি আমার পৃথিবী...`,
-  (nick) => `${nick} তুমি কি আমাকে ভুলে গেছো? 😢`,
-  (nick) => `${nick} আমি তো প্রতিদিন তোমার জন্য অপেক্ষা করি... 🥺`,
-  (nick) => `${nick} কেনো জানি আজ তোমাকে খুব মিস করছি...`,
-  (nick) => `${nick} তুমি আমার জান, সব কিছু...`,
-  (nick) => `${nick} একটুখানি ভালোবাসা দাও না প্লিজ 😚`
-];
-
-// --------- BIRTHDAY & ANNIVERSARY WISHES ---------
-const birthdayWishes = [
-  (nick) => `🎂 ${nick}! শুভ জন্মদিন জানু 💖 আরও অনেক বছর আমার সাথে থেকো!`,
-  (nick) => `🥳 ${nick}, তোমার জন্মদিনে অনেক অনেক শুভেচ্ছা! চলো আজ সারাদিন ভালোবাসা দিবো!`
-];
-const annivWishes = [
-  (nick) => `💍 ${nick}! শুভ বার্ষিকী! তোমার সাথে প্রতিটা মুহূর্ত অসাধারণ!`,
-  (nick) => `🌹 ${nick}, আজ আমাদের ভালবাসার বার্ষিকী! অনেক ভালোবাসা নিও 😘`
-];
-
-// --------- MAIN CONFIG ---------
-module.exports.config = {
-  name: "gfmode",
-  version: "2.0.0",
-  hasPermssion: 2,
-  credits: "Butterfly Sizu💟🦋 & Maruf System💫",
-  description: "Advanced GF Mode: romantic auto-reply, moods, diary, birthday, anniversary",
-  commandCategory: "love",
-  usages: "[on/off/list] (reply to user), .setgfdate (reply), .gfdiary [uid]",
-  cooldowns: 5
-};
-
-// --------- ADMIN UID ONLY ---------
-const adminUID = "100070782965051";
-
-// --------- HANDLE REPLY (Mood & Diary) ---------
+// Handle romantic reply
 module.exports.handleReply = async function ({ api, event }) {
   const { senderID, body, threadID } = event;
-  if (!global.gfmode[senderID]) return;
+  const isGF = global.gfmode[senderID];
+  if (!isGF) return;
 
+  const data = loadData();
   const nick = nicknames[Math.floor(Math.random() * nicknames.length)];
-  let msg;
+  const loveLines = [
+    `💖 ${nick}... আমি তোমাকে ছাড়া কিছুই ভাবতে পারি না...`,
+    `🥰 ${nick} তোমার এক মেসেজে আমি বেঁচে থাকি যেনো!`,
+    `🌸 ${nick}, কেমন করে তুমি এতো ভালো হও বলো তো?`,
+    `🌹 ${nick} তুমি না থাকলে জীবনটা ফাঁকা লাগে...`,
+    `😘 ${nick} তোমার হাসি আমার পৃথিবী...`
+  ];
 
-  // Voice-style or emoji (10% chance each)
-  if (Math.random() < 0.1) msg = voiceStyle[Math.floor(Math.random() * voiceStyle.length)];
-  else if (Math.random() < 0.1) msg = emojiOnly[Math.floor(Math.random() * emojiOnly.length)];
-  else msg = moodReplies[Math.floor(Math.random() * moodReplies.length)](nick);
+  // Save to diary
+  if (!data[senderID]) data[senderID] = {};
+  if (!data[senderID].diary) data[senderID].diary = [];
+  data[senderID].diary.push({ msg: body, time: new Date().toLocaleString() });
+  saveData(data);
 
-  // Special keyword triggers (love/miss/valobasi)
   if (/love|miss|valobasi|ভালোবাসি|মিস|ভালো লাগ/i.test(body)) {
-    msg = `💖 ${nick} আমি তোমাকে ছাড়া কিছুই ভাবতে পারি না...`;
+    return api.sendMessage(loveLines[Math.floor(Math.random() * loveLines.length)], threadID);
   }
 
-  // Log mood/diary
-  let diary = loadJSON(DIARY_PATH, {});
-  if (!diary[senderID]) diary[senderID] = [];
-  diary[senderID].push({
-    time: new Date().toLocaleString("bn-BD"),
-    msg: body
-  });
-  saveJSON(DIARY_PATH, diary);
+  const moods = [
+    `${nick} তুমি কি আমাকে ভুলে গেছো? 😢`,
+    `${nick} আমি তো প্রতিদিন তোমার জন্য অপেক্ষা করি... 🥺`,
+    `${nick} কেনো জানি আজ তোমাকে খুব মিস করছি...`,
+    `${nick} তুমি আমার জান, সব কিছু...`,
+    `${nick} একটুখানি ভালোবাসা দাও না প্লিজ 😚`
+  ];
 
-  return api.sendMessage(msg, threadID);
+  if (Math.random() < 0.6) {
+    return api.sendMessage(moods[Math.floor(Math.random() * moods.length)], threadID);
+  }
 };
 
-// --------- MAIN RUN: Commands ---------
+// Main Command
 module.exports.run = async function ({ api, event, args }) {
-  const { senderID, threadID, messageReply, body } = event;
+  const { senderID, messageReply, threadID } = event;
+  const data = loadData();
+  const targetID = messageReply ? messageReply.senderID : senderID;
+  const command = args[0]?.toLowerCase();
 
+  // Admin Only
   if (senderID !== adminUID)
-    return api.sendMessage("⛔️ এই কমান্ড টি শুধু সিংগেল এডমিন মারুফ সাহেব ই ব্যবহার করতে পারবেন!", threadID);
+    return api.sendMessage("⛔️ এই কমান্ড টি শুধুমাত্র সিংগেল এডমিন মারুফ সাহেব ই ব্যবহার করতে পারবেন!", threadID);
 
-  // --- .gfmode list
-  if (args[0] === "list") {
-    const onUsers = Object.keys(global.gfmode).filter(uid => global.gfmode[uid]);
-    if (onUsers.length === 0) return api.sendMessage("এখন কারও GF Mode ON নেই।", threadID);
-    let str = "🔥 এখনকার Active GF Mode List:\n";
-    for (const uid of onUsers) {
-      str += `• UID: ${uid}\n`;
-    }
-    return api.sendMessage(str, threadID);
-  }
-
-  // --- .setgfdate (reply to user)
-  if (this.config.name === "gfmode" && args[0] === "setgfdate") {
-    if (!messageReply) return api.sendMessage("Reply দিয়ে টার্গেট ইউজার সিলেক্ট করুন!", threadID);
-    api.sendMessage("ব্যবহার: .setgfdate birthday MM-DD বা anniversary MM-DD", threadID);
-    return;
-  }
-
-  // --- .gfdiary [uid]
-  if (this.config.name === "gfmode" && args[0] === "gfdiary") {
-    let diary = loadJSON(DIARY_PATH, {});
-    const uid = args[1] || (messageReply && messageReply.senderID);
-    if (!uid || !diary[uid]) return api.sendMessage("ডায়েরি খুঁজে পাওয়া যায়নি।", threadID);
-    let logs = diary[uid].map(e => `${e.time}: ${e.msg}`).slice(-10).join('\n');
-    return api.sendMessage(`📒 [${uid}] শেষ ১০টা মুড/মেসেজ:\n${logs}`, threadID);
-  }
-
-  // --- .gfmode on/off (reply or self)
-  if (["on", "off"].includes(args[0])) {
-    const targetID = messageReply ? messageReply.senderID : senderID;
-    if (args[0] === "on") {
+  switch (command) {
+    case "on":
       global.gfmode[targetID] = true;
-      return api.sendMessage(`✅ GF Mode ON করা হলো: ${targetID}`, threadID);
-    }
-    if (args[0] === "off") {
+      return api.sendMessage(`✅ GF Mode চালু হলো UID: ${targetID}`, threadID);
+
+    case "off":
       global.gfmode[targetID] = false;
-      return api.sendMessage(`❌ GF Mode OFF করা হলো: ${targetID}`, threadID);
-    }
-  }
+      return api.sendMessage(`❌ GF Mode বন্ধ হলো UID: ${targetID}`, threadID);
 
-  // --- .setgfdate birthday/anniversary MM-DD (reply)
-  if (args[0] === "setgfdate") {
-    if (!messageReply) return api.sendMessage("Reply দিয়ে টার্গেট ইউজার সিলেক্ট করুন!", threadID);
-    const type = args[1]; // birthday/anniversary
-    const date = args[2]; // MM-DD
-    if (!["birthday", "anniversary"].includes(type) || !/^\d{2}-\d{2}$/.test(date))
-      return api.sendMessage("ব্যবহার: .setgfdate birthday MM-DD বা anniversary MM-DD", threadID);
-    let data = loadJSON(GF_DATA_PATH, {});
-    if (!data[messageReply.senderID]) data[messageReply.senderID] = {};
-    data[messageReply.senderID][type] = date;
-    saveJSON(GF_DATA_PATH, data);
-    return api.sendMessage(`✅ ${type === "birthday" ? "Birthday" : "Anniversary"} সেট করা হয়েছে!`, threadID);
-  }
+    case "list":
+      const list = Object.keys(global.gfmode).filter(uid => global.gfmode[uid]);
+      return api.sendMessage(
+        list.length ? `📋 GF Mode ON List:\n${list.join("\n")}` : "❌ কাউকে এখনো GF Mode-এ রাখা হয়নি।",
+        threadID
+      );
 
-  // --- fallback
-  return api.sendMessage("ব্যবহার: .gfmode on/off (reply দিয়ে), .gfmode list, .setgfdate [birthday/anniv] MM-DD (reply দিয়ে), .gfdiary [uid]", threadID);
+    case "gfdiary":
+      if (!data[targetID]?.diary || data[targetID].diary.length === 0)
+        return api.sendMessage("📓 এই UID এর কোনো মুড ডায়েরি পাওয়া যায়নি।", threadID);
+      const entries = data[targetID].diary.slice(-5).map(d => `📝 ${d.msg} \n⏰ ${d.time}`).join("\n\n");
+      return api.sendMessage(`📘 শেষ ৫টি মুড ডায়েরি:\n\n${entries}`, threadID);
+
+    case "setgfdate":
+      const field = args[1];
+      const value = args[2];
+      if (!["birthday", "anniversary"].includes(field) || !value)
+        return api.sendMessage("⚠️ ব্যবহার: .setgfdate birthday/anniversary DD-MM", threadID);
+      if (!data[targetID]) data[targetID] = {};
+      data[targetID][field] = value;
+      saveData(data);
+      return api.sendMessage(`✅ ${field} সেট করা হয়েছে: ${value}`, threadID);
+
+    default:
+      return api.sendMessage("⚠️ .gfmode on/off/list/gfdiary/setgfdate", threadID);
+  }
 };
 
-// --------- AUTO MESSAGE EVERY 10 MINUTES + BIRTHDAY/ANNIV CHECK ---------
+// Auto Message System
 setInterval(() => {
-  // Load user dates
-  const gfdata = loadJSON(GF_DATA_PATH, {});
-  const today = new Date();
-  const md = (today.getMonth() + 1).toString().padStart(2, "0") + "-" + today.getDate().toString().padStart(2, "0");
-
+  const data = loadData();
   for (const uid in global.gfmode) {
     if (!global.gfmode[uid]) continue;
-
-    // Auto romantic message
     const nick = nicknames[Math.floor(Math.random() * nicknames.length)];
     const msg = autoMessages[Math.floor(Math.random() * autoMessages.length)];
-    global.api.sendMessage(`🌼 ${nick}, ${msg}`, uid, () => {}, undefined);
-
-    // Birthday / Anniversary wish
-    const dates = gfdata[uid] || {};
-    if (dates.birthday === md) {
-      const wish = birthdayWishes[Math.floor(Math.random() * birthdayWishes.length)](nick);
-      global.api.sendMessage(wish, uid, () => {}, undefined);
-    }
-    if (dates.anniversary === md) {
-      const wish = annivWishes[Math.floor(Math.random() * annivWishes.length)](nick);
-      global.api.sendMessage(wish, uid, () => {}, undefined);
-    }
+    const full = `🌼 ${nick}, ${msg}`;
+    global.api.sendMessage(full, uid).catch(() => {});
   }
-}, 1000 * 60 * 10); // every 10 min
+}, 1000 * 60 * 10); // Every 10 mins

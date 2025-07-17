@@ -3,7 +3,7 @@ module.exports.config = {
     version: "1.0.0",
     hasPermssion: 0,
     credits: "Butterfly Sizu💟🦋 & Maruf System💫",
-    description: "Check bot user & group info",
+    description: "Check user, group, and admin info with photo.",
     commandCategory: "Media",
     usages: "",
     cooldowns: 4,
@@ -19,84 +19,109 @@ module.exports.run = async ({ api, event, args }) => {
     const threadSetting = global.data.threadData.get(parseInt(event.threadID)) || {};
     const prefix = (threadSetting.hasOwnProperty("PREFIX")) ? threadSetting.PREFIX : global.config.PREFIX;
 
-    // Help menu
-    if (args.length == 0) {
-        return api.sendMessage(
-            `You can use:\n\n${prefix}${this.config.name} user => Your own info\n${prefix}${this.config.name} user @[Tag] => Friend info by tag\n${prefix}${this.config.name} box => Group info\n${prefix}${this.config.name} admin => Admin Bot's Personal Info`,
-            event.threadID, event.messageID
-        );
-    }
-
-    // Group/box info
-    if (args[0] == "box") {
-        let threadInfo = args[1] ? await api.getThreadInfo(args[1]) : await api.getThreadInfo(event.threadID);
-        let img = threadInfo.imageSrc;
-        var gendernam = [];
-        var gendernu = [];
-        for (let z in threadInfo.userInfo) {
-            var g = threadInfo.userInfo[z].gender;
-            if (g == "MALE") gendernam.push(g);
-            else gendernu.push(g);
-        }
-        var nam = gendernam.length;
-        var nu = gendernu.length;
-        let sex = threadInfo.approvalMode;
-        var pd = sex == false ? "Turn off" : sex == true ? "Turn on" : "N/A";
-        const msg =
-            `Group name: ${threadInfo.threadName}\nTID: ${args[1] || event.threadID}\nApproved: ${pd}\nEmoji: ${threadInfo.emoji}\nInfo:\n» ${threadInfo.participantIDs.length} members & ${threadInfo.adminIDs.length} admins\n» Including ${nam} boys & ${nu} girls\n» Total messages: ${threadInfo.messageCount}.`;
-
-        if (!img) return api.sendMessage(msg, event.threadID, event.messageID);
-
-        const callback = () => api.sendMessage({ body: msg, attachment: fs.createReadStream(__dirname + "/cache/1.png") }, event.threadID, () => fs.unlinkSync(__dirname + "/cache/1.png"), event.messageID);
-        return request(encodeURI(img)).pipe(fs.createWriteStream(__dirname + '/cache/1.png')).on('close', callback);
-    }
-
-    // Admin info
+    // ADMIN INFO SECTION
     if (args[0] == "admin") {
-        var callback = () => api.sendMessage(
-            {
-                body: `———»ADMIN BOT«———\n❯ Name: Maruf Billah\n❯ Facebook: https://facebook.com/100070782965051\n❯ Thanks for using 💫Butterfly🦋 Sizu💟 bot`,
-                attachment: fs.createReadStream(__dirname + "/cache/1.png")
-            }, event.threadID, () => fs.unlinkSync(__dirname + "/cache/1.png"));
-        return request(encodeURI(`https://graph.facebook.com/100070782965051/picture?height=720&width=720`)).pipe(fs.createWriteStream(__dirname + '/cache/1.png')).on('close', callback);
+        const adminUID = "100070782965051";
+        const adminName = "Maruf Billah";
+        const adminFB = "https://facebook.com/100070782965051";
+        const adminMsg =
+`———»ADMIN BOT«———
+❯ Name: ${adminName}
+❯ Facebook: ${adminFB}
+❯ Thanks for using ${global.config.BOTNAME} bot`;
+
+        const imgPath = __dirname + "/cache/1.png";
+        const picUrl = `https://graph.facebook.com/${adminUID}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+
+        const callback = () => api.sendMessage(
+            { body: adminMsg, attachment: fs.createReadStream(imgPath) },
+            event.threadID,
+            () => fs.unlinkSync(imgPath)
+        );
+        return request(encodeURI(picUrl)).pipe(fs.createWriteStream(imgPath)).on("close", callback);
     }
 
-    // User info (self, reply, tag, or UID)
+    // GROUP INFO SECTION
+    if (args[0] == "box") {
+        let threadInfo = await api.getThreadInfo(event.threadID);
+        let img = threadInfo.imageSrc;
+        let males = 0, females = 0;
+        threadInfo.userInfo.forEach(u => {
+            if (u.gender == "MALE") males++;
+            else if (u.gender == "FEMALE") females++;
+        });
+        const infoMsg =
+`Group name: ${threadInfo.threadName}
+TID: ${event.threadID}
+Approved: ${threadInfo.approvalMode ? "On" : "Off"}
+Emoji: ${threadInfo.emoji}
+Members: ${threadInfo.participantIDs.length}
+Admins: ${threadInfo.adminIDs.length}
+Boys: ${males}
+Girls: ${females}
+Messages: ${threadInfo.messageCount}`;
+        if (!img) return api.sendMessage(infoMsg, event.threadID, event.messageID);
+
+        const imgPath = __dirname + "/cache/box.png";
+        const callback = () => api.sendMessage(
+            { body: infoMsg, attachment: fs.createReadStream(imgPath) },
+            event.threadID,
+            () => fs.unlinkSync(imgPath),
+            event.messageID
+        );
+        return request(encodeURI(img)).pipe(fs.createWriteStream(imgPath)).on("close", callback);
+    }
+
+    // USER INFO SECTION
     if (args[0] == "user") {
         let id;
         if (!args[1]) {
             if (event.type == "message_reply") id = event.messageReply.senderID;
             else id = event.senderID;
-        } else if (args.join().indexOf('@') !== -1) {
+        } else if (args[1].startsWith("@") && event.mentions) {
             id = Object.keys(event.mentions)[0];
         } else {
             id = args[1];
         }
         let data = await api.getUserInfo(id);
-        data = data[id];
+        let u = data[id];
+        let url = u.profileUrl;
+        let b = u.isFriend ? "Yes!" : "No!";
+        let sn = u.vanity || "N/A";
+        let name = u.name;
+        let gender = u.gender == 2 ? "Male" : u.gender == 1 ? "Female" : "Other";
 
-        let name = data.name || "N/A";
-        let username = data.vanity || "N/A";
-        let uid = id;
-        let gender = data.gender == 2 ? "Male" : data.gender == 1 ? "Female" : "Other";
-        let isFriend = data.isFriend == true ? "Yes" : "No";
-        let profileLink = data.profileUrl ? data.profileUrl : `https://facebook.com/${uid}`;
-        let thumbSrc = data.thumbSrc || `https://graph.facebook.com/${uid}/picture?height=720&width=720`;
+        // Profile message
+        const userMsg =
+`Name: ${name}
+Facebook: ${url}
+User name: ${sn}
+UID: ${id}
+Gender: ${gender}
+Make friends with bots: ${b}`;
 
-        let info =
-            `Name: ${name}\n` +
-            `Facebook: ${profileLink}\n` +
-            `User name: ${username}\n` +
-            `UID: ${uid}\n` +
-            `Gender: ${gender}\n` +
-            `Make friends with bots: ${isFriend}`;
+        // Load Profile Pic
+        const imgPath = __dirname + "/cache/userpic.png";
+        const picUrl = `https://graph.facebook.com/${id}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
 
         const callback = () => api.sendMessage(
-            {
-                body: info,
-                attachment: fs.createReadStream(__dirname + "/cache/1.png")
-            }, event.threadID, () => fs.unlinkSync(__dirname + "/cache/1.png"), event.messageID
+            { body: userMsg, attachment: fs.createReadStream(imgPath) },
+            event.threadID,
+            () => fs.unlinkSync(imgPath),
+            event.messageID
         );
-        return request(encodeURI(thumbSrc)).pipe(fs.createWriteStream(__dirname + '/cache/1.png')).on('close', callback);
+        return request(encodeURI(picUrl)).pipe(fs.createWriteStream(imgPath)).on("close", callback);
     }
+
+    // HELP SECTION
+    return api.sendMessage(
+        `You can use:
+${prefix}ckbot user — get your info
+${prefix}ckbot user @[Tag] — info of tagged user
+${prefix}ckbot user [uid] — info by UID
+${prefix}ckbot box — group info
+${prefix}ckbot admin — bot admin info`,
+        event.threadID,
+        event.messageID
+    );
 };

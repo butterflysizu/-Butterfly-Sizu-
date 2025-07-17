@@ -3,7 +3,7 @@ module.exports.config = {
     version: "1.0.0",
     hasPermssion: 0,
     credits: "Butterfly Sizu💟🦋 & Maruf System💫",
-    description: "Facebook user or box info with profile picture",
+    description: "Facebook user info with profile pic, proper gender",
     commandCategory: "Media",
     usages: "",
     cooldowns: 4,
@@ -16,10 +16,8 @@ module.exports.config = {
 module.exports.run = async ({ api, event, args }) => {
     const fs = global.nodemodule["fs-extra"];
     const request = global.nodemodule["request"];
-    const threadSetting = global.data.threadData.get(parseInt(event.threadID)) || {};
-    const prefix = (threadSetting.hasOwnProperty("PREFIX")) ? threadSetting.PREFIX : global.config.PREFIX;
 
-    // User Info
+    // USER INFO
     if (args[0] == "user") {
         let id;
         if (!args[1]) {
@@ -30,27 +28,25 @@ module.exports.run = async ({ api, event, args }) => {
         } else {
             id = args[1];
         }
-
         let data = await api.getUserInfo(id);
         let u = data[id];
-
         let name = u.name || "N/A";
         let sn = u.vanity || "N/A";
         let fbUrl = u.profileUrl || `https://facebook.com/${id}`;
-        let b = u.isFriend === false ? "No" : u.isFriend === true ? "Yes" : "Unknown";
+        let isFriend = u.isFriend === false ? "No" : u.isFriend === true ? "Yes" : "Unknown";
         let gender;
         if (u.gender == 2) gender = "Male";
         else if (u.gender == 1) gender = "Female";
         else gender = "Unknown";
 
-        // User info message
+        // Clean final message
         const userMsg =
 `Name: ${name}
 Facebook: ${fbUrl}
 User name: ${sn}
 UID: ${id}
 Gender: ${gender}
-Make friends with bots: ${b}`;
+Make friends with bots: ${isFriend}!`;
 
         // Download profile pic and send
         const imgUrl = `https://graph.facebook.com/${id}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
@@ -64,7 +60,7 @@ Make friends with bots: ${b}`;
         return;
     }
 
-    // Admin info
+    // ADMIN info
     if (args[0] == "admin") {
         const adminId = "100070782965051";
         const adminImg = `https://graph.facebook.com/${adminId}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
@@ -85,7 +81,7 @@ Make friends with bots: ${b}`;
 
     // Help message
     return api.sendMessage(
-        `You can use:\n\n${prefix}${this.config.name} user => Show your own info\n${prefix}${this.config.name} user @[Tag] => Tag friend's info\n${prefix}${this.config.name} user [uid] => Specific user's info\n${prefix}${this.config.name} admin => Admin Bot's Personal Info`,
+        `You can use:\n\n${global.config.PREFIX}${this.config.name} user => Show your own info\n${global.config.PREFIX}${this.config.name} user @[Tag] => Tag friend's info\n${global.config.PREFIX}${this.config.name} user [uid] => Specific user's info\n${global.config.PREFIX}${this.config.name} admin => Admin Bot's Personal Info`,
         event.threadID, event.messageID
     );
 };

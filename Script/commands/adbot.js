@@ -3,60 +3,47 @@ module.exports.config = {
     version: "1.0.0",
     hasPermssion: 0,
     credits: "Butterfly Sizu💟🦋 & Maruf System💫",
-    description: "User, group, admin info (clean)",
+    description: "Facebook user or box info with profile picture",
     commandCategory: "Media",
     usages: "",
     cooldowns: 4,
-    dependencies: { "request": "", "fs": "" }
+    dependencies: {
+        "request": "",
+        "fs": ""
+    }
 };
 
 module.exports.run = async ({ api, event, args }) => {
     const fs = global.nodemodule["fs-extra"];
     const request = global.nodemodule["request"];
-    const prefix = global.config.PREFIX;
+    const threadSetting = global.data.threadData.get(parseInt(event.threadID)) || {};
+    const prefix = (threadSetting.hasOwnProperty("PREFIX")) ? threadSetting.PREFIX : global.config.PREFIX;
 
-    // ADMIN INFO
-    if (args[0] == "admin") {
-        const adminUID = "100070782965051";
-        const adminName = "Maruf Billah";
-        const adminFB = "https://facebook.com/100070782965051";
-        const adminMsg =
-`———»ADMIN BOT«———
-❯ Name: ${adminName}
-❯ Facebook: ${adminFB}
-❯ Thanks for using ${global.config.BOTNAME} bot`;
-
-        const imgPath = __dirname + "/cache/1.png";
-        const picUrl = `https://graph.facebook.com/${adminUID}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
-
-        const callback = () => api.sendMessage(
-            { body: adminMsg, attachment: fs.createReadStream(imgPath) },
-            event.threadID,
-            () => fs.unlinkSync(imgPath)
-        );
-        return request(encodeURI(picUrl)).pipe(fs.createWriteStream(imgPath)).on("close", callback);
-    }
-
-    // USER INFO
+    // User Info
     if (args[0] == "user") {
         let id;
         if (!args[1]) {
             if (event.type == "message_reply") id = event.messageReply.senderID;
             else id = event.senderID;
-        } else if (args[1].startsWith("@") && event.mentions) {
+        } else if (args[1].startsWith("@") && event.mentions && Object.keys(event.mentions).length > 0) {
             id = Object.keys(event.mentions)[0];
         } else {
             id = args[1];
         }
+
         let data = await api.getUserInfo(id);
         let u = data[id];
-        let fbUrl = u.vanity ? `https://facebook.com/${u.vanity}` : `https://facebook.com/${id}`;
-        let b = u.isFriend ? "Yes!" : "No!";
-        let sn = u.vanity || "N/A";
-        let name = u.name;
-        let gender = u.gender == 2 ? "Male" : u.gender == 1 ? "Female" : "Other";
 
-        // CLEAN Profile message
+        let name = u.name || "N/A";
+        let sn = u.vanity || "N/A";
+        let fbUrl = u.profileUrl || `https://facebook.com/${id}`;
+        let b = u.isFriend === false ? "No" : u.isFriend === true ? "Yes" : "Unknown";
+        let gender;
+        if (u.gender == 2) gender = "Male";
+        else if (u.gender == 1) gender = "Female";
+        else gender = "Unknown";
+
+        // User info message
         const userMsg =
 `Name: ${name}
 Facebook: ${fbUrl}
@@ -65,59 +52,40 @@ UID: ${id}
 Gender: ${gender}
 Make friends with bots: ${b}`;
 
-        // Profile Pic
-        const imgPath = __dirname + "/cache/userpic.png";
-        const picUrl = `https://graph.facebook.com/${id}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
-
-        const callback = () => api.sendMessage(
-            { body: userMsg, attachment: fs.createReadStream(imgPath) },
-            event.threadID,
-            () => fs.unlinkSync(imgPath),
-            event.messageID
-        );
-        return request(encodeURI(picUrl)).pipe(fs.createWriteStream(imgPath)).on("close", callback);
-    }
-
-    // GROUP INFO
-    if (args[0] == "box") {
-        let threadInfo = await api.getThreadInfo(event.threadID);
-        let img = threadInfo.imageSrc;
-        let males = 0, females = 0;
-        threadInfo.userInfo.forEach(u => {
-            if (u.gender == "MALE") males++;
-            else if (u.gender == "FEMALE") females++;
+        // Download profile pic and send
+        const imgUrl = `https://graph.facebook.com/${id}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+        const imgPath = __dirname + "/cache/profilepic.png";
+        request(encodeURI(imgUrl)).pipe(fs.createWriteStream(imgPath)).on('close', () => {
+            api.sendMessage({
+                body: userMsg,
+                attachment: fs.createReadStream(imgPath)
+            }, event.threadID, () => fs.unlinkSync(imgPath), event.messageID);
         });
-        const infoMsg =
-`Group name: ${threadInfo.threadName}
-TID: ${event.threadID}
-Approved: ${threadInfo.approvalMode ? "On" : "Off"}
-Emoji: ${threadInfo.emoji}
-Members: ${threadInfo.participantIDs.length}
-Admins: ${threadInfo.adminIDs.length}
-Boys: ${males}
-Girls: ${females}
-Messages: ${threadInfo.messageCount}`;
-        if (!img) return api.sendMessage(infoMsg, event.threadID, event.messageID);
-
-        const imgPath = __dirname + "/cache/box.png";
-        const callback = () => api.sendMessage(
-            { body: infoMsg, attachment: fs.createReadStream(imgPath) },
-            event.threadID,
-            () => fs.unlinkSync(imgPath),
-            event.messageID
-        );
-        return request(encodeURI(img)).pipe(fs.createWriteStream(imgPath)).on("close", callback);
+        return;
     }
 
-    // HELP
+    // Admin info
+    if (args[0] == "admin") {
+        const adminId = "100070782965051";
+        const adminImg = `https://graph.facebook.com/${adminId}/picture?height=720&width=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+        const imgPath = __dirname + "/cache/adminpic.png";
+        const adminMsg =
+`———»ADMIN BOT«———
+❯ Name: Maruf Billah
+❯ Facebook: https://facebook.com/100070782965051
+❯ Thanks for using 💫Butterfly🦋 Sizu💟 bot`;
+        request(encodeURI(adminImg)).pipe(fs.createWriteStream(imgPath)).on('close', () => {
+            api.sendMessage({
+                body: adminMsg,
+                attachment: fs.createReadStream(imgPath)
+            }, event.threadID, () => fs.unlinkSync(imgPath));
+        });
+        return;
+    }
+
+    // Help message
     return api.sendMessage(
-        `You can use:
-${prefix}ckbot user — get your info
-${prefix}ckbot user @[Tag] — info of tagged user
-${prefix}ckbot user [uid] — info by UID
-${prefix}ckbot box — group info
-${prefix}ckbot admin — bot admin info`,
-        event.threadID,
-        event.messageID
+        `You can use:\n\n${prefix}${this.config.name} user => Show your own info\n${prefix}${this.config.name} user @[Tag] => Tag friend's info\n${prefix}${this.config.name} user [uid] => Specific user's info\n${prefix}${this.config.name} admin => Admin Bot's Personal Info`,
+        event.threadID, event.messageID
     );
 };
